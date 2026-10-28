@@ -1,0 +1,194 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-void);
+  color: var(--c-bone);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--c-amber);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-amber);
+  outline-offset: 2px;
+}
+
+/* ---------- App frame ---------- */
+
+.app {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 720px;
+  margin: 0 auto;
+  background:
+    radial-gradient(120% 60% at 50% 0%, #142022 0%, transparent 60%),
+    var(--c-bg);
+}
+
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: calc(var(--safe-top) + var(--sp-2)) calc(var(--safe-right) + var(--sp-2)) var(--sp-2)
+    calc(var(--safe-left) + var(--sp-2));
+  background: linear-gradient(180deg, var(--c-panel-2), var(--c-panel));
+  border-bottom: 1px solid var(--c-line);
+}
+
+.appbar__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.appbar__kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-stencil);
+  text-transform: uppercase;
+  color: var(--c-olive-300);
+}
+
+.appbar__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appbar__emblem {
+  width: 36px;
+  height: 36px;
+  margin: 4px;
+}
+
+.appbar__btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  color: var(--c-steel-200);
+  background: var(--c-panel-3);
+  clip-path: polygon(
+    var(--chamfer-sm) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer-sm)),
+    calc(100% - var(--chamfer-sm)) 100%,
+    0 100%,
+    0 var(--chamfer-sm)
+  );
+}
+
+.appbar__btn:active,
+.appbar__btn.is-active {
+  background: var(--c-olive-600);
+  color: var(--c-bone);
+}
+
+.outlet {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--sp-3) calc(var(--safe-right) + var(--sp-3)) var(--sp-4) calc(var(--safe-left) + var(--sp-3));
+  outline: none;
+}
+
+[data-route='system'] .outlet {
+  overflow: hidden;
+  padding: 0 var(--safe-right) 0 var(--safe-left);
+}
+
+.dock {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+  background: var(--c-panel);
+  border-top: 1px solid var(--c-line);
+}
+
+.dock__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  color: var(--c-steel-400);
+  text-decoration: none;
+  border-top: 2px solid transparent;
+  transition: color var(--dur-fast);
+}
+
+.dock__label {
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-stencil);
+  text-transform: uppercase;
+}
+
+.dock__link:active {
+  background: var(--c-panel-2);
+}
+
+.dock__link.is-active {
+  color: var(--c-amber);
+  border-top-color: var(--c-amber);
+  background: linear-gradient(180deg, rgb(217 164 65 / 0.12), transparent 70%);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+}
+
+.icon--sm {
+  width: 14px;
+  height: 14px;
+}
