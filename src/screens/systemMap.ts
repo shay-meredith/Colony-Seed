@@ -187,14 +187,25 @@ function selectedSheet(ctx: AppContext, body: SystemBody): HTMLElement {
       h('h2', { class: 'sheet__title' }, body.name),
       h('p', { class: 'sheet__body' }, body.summary),
     ),
-    h(
-      'div',
-      { class: 'sheet__actions' },
-      button(`View ${body.name}`, { variant: 'primary', onClick: () => ctx.navigate(`/body/${body.id}`) }),
-      ...sats.map((sat) =>
-        button(`${sat.name} · ${KIND_LABEL[sat.kind]}`, { onClick: () => ctx.navigate(`/body/${sat.id}`) }),
-      ),
-    ),
+    button(`View ${body.name}`, {
+      variant: 'primary',
+      class: 'sheet__primary',
+      onClick: () => ctx.navigate(`/body/${body.id}`),
+    }),
+    sats.length
+      ? h(
+          'nav',
+          { class: 'chips sheet__sats', 'aria-label': `In orbit of ${body.name}` },
+          ...sats.map((sat) =>
+            h(
+              'a',
+              { class: 'chip', href: `#/body/${sat.id}` },
+              h('span', { class: 'chip__kind' }, KIND_LABEL[sat.kind]),
+              sat.name,
+            ),
+          ),
+        )
+      : null,
   );
 }
 

@@ -81,7 +81,7 @@
 
 .map-label {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 34px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   fill: var(--c-steel-400);
@@ -126,14 +126,12 @@
   font-size: var(--fs-sm);
 }
 
-.sheet__actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-2);
+.sheet__primary {
+  width: 100%;
 }
 
-.sheet__actions .btn--primary {
-  grid-column: 1 / -1;
+.sheet__sats {
+  margin: var(--sp-2) 0 0;
 }
 
 .readiness {
