@@ -1,0 +1,25 @@
+{
+  "name": "colony-seed",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Phone-first PWA colony-prep game: direct AI robots preparing a planetary system before human colonists arrive.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shay-meredith/Colony-Seed.git"
+  },
+  "homepage": "https://shay-meredith.github.io/Colony-Seed/",
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}
