@@ -6,7 +6,7 @@ The pace is slow and decision-driven, in the spirit of Tropico and Paradox games
 
 > **Design source of truth:** [`docs/DESIGN_CONTEXT.md`](docs/DESIGN_CONTEXT.md). Read it before making gameplay or UI changes.
 
-**Status:** Slice A (scaffold). The navigation shell, time controls, and HUD work. Gameplay is stubbed.
+**Status:** Slice A (scaffold) plus the first piece of the Slice B loop. Bot pips can be assigned to survey directives (Explore), construction jobs (Build), and building crews (Bots). Jobs progress with the clock, buildings produce resources, and readiness updates. Numbers are placeholders.
 
 ## Play
 
@@ -49,7 +49,7 @@ src/
   app/        context (stores + clock), hash router, route table, shell frame, events
   core/       tiny DOM helper, observable store, seeded RNG
   sim/        SimClock (pauseable realtime), rAF driver with hard-pause, time formatting
-  game/       resource + readiness definitions, game state, UI state
+  game/       resource + readiness definitions, building/directive catalog, pure sim rules, game loop, state
   data/       placeholder star system
   ui/         HUD, time bar, dock, icons, shared components, procedural body art
   screens/    systemMap (home), body, explore, build, bots, policy, menu
@@ -64,9 +64,9 @@ docs/         DESIGN_CONTEXT.md
 | --- | --- |
 | `#/` | **System map (home).** Tap a planet to see it and its moons and stations, plus colony readiness. |
 | `#/body/:id` | **Body viewer.** Procedural portrait, stats, a growth preview, and switching between bodies in the same orbit. |
-| `#/explore` | Exploration through survey directives and an event log (stub) |
-| `#/build` | Building shop and active buildings (stub) |
-| `#/bots` | Bot pip workforce and assignments (stub) |
+| `#/explore` | Survey directives per body (orbital, ground, deep core) and the event log |
+| `#/build` | Building shop per site, plus active construction and crews |
+| `#/bots` | Bot pip workforce, fabricating bots, and every assignment with pip steppers |
 | `#/policy` | Standing orders (stub; policy depth is still an open question) |
 | `#/menu` | Settings (auto-pause toggle, test event), game actions (stub), about |
 

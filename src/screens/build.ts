@@ -1,26 +1,13 @@
 import { clear, h } from '../core/dom';
-import { getBody } from '../data/system';
-import { button, costList, emptyState, panel, type Cost } from '../ui/components';
+import { BUILDINGS, getBuilding } from '../game/catalog';
+import { buildBlocker, startBuild } from '../game/sim';
+import { bindGame, crewRow, jobRow, siteChips, siteFromQuery, workforceKey } from '../ui/assignments';
+import { button, costList, emptyState, panel } from '../ui/components';
 import type { ScreenFactory } from './types';
-
-interface BuildingStub {
-  name: string;
-  effect: string;
-  cost: Cost;
-  gate?: string;
-}
-
-const SHOP: BuildingStub[] = [
-  { name: 'Solar array', effect: '+Power', cost: { materials: 30, botDays: 4 } },
-  { name: 'Habitat module', effect: '+100 Housing', cost: { materials: 80, power: 10, botDays: 8 }, gate: 'Requires surveyed site' },
-  { name: 'Hydroponics bay', effect: '+80 Food capacity', cost: { materials: 40, volatiles: 20, botDays: 6 }, gate: 'Requires Habitat module' },
-  { name: 'Fabricator', effect: 'Unlocks Parts', cost: { materials: 60, power: 20, data: 20, botDays: 10 }, gate: 'Requires 20 Data' },
-  { name: 'Volatiles skimmer', effect: '+Volatiles', cost: { materials: 90, botDays: 12 }, gate: 'Gas giant orbit only' },
-];
 
 /** Build = shop + assign flow. The visible result lives on the Body viewer. */
 export const buildScreen: ScreenFactory = (ctx, { location }) => {
-  const site = getBody(ctx.system, location.query.get('body') ?? '');
+  const site = siteFromQuery(ctx, location.query);
   const content = h('div', { class: 'tab-panel' });
 
   const tabs = (['shop', 'active'] as const).map((id) =>
@@ -36,35 +23,69 @@ export const buildScreen: ScreenFactory = (ctx, { location }) => {
     ),
   );
 
+  const shop = () => {
+    const list = h('ul', { class: 'cards' });
+    const unsub = bindGame(
+      ctx,
+      list,
+      (s) => `${workforceKey(s)}|${BUILDINGS.map((b) => buildBlocker(s, ctx.system, b, site.id)).join(',')}`,
+      (state) =>
+        BUILDINGS.map((b) => {
+          const blocker = buildBlocker(state, ctx.system, b, site.id);
+          return h(
+            'li',
+            { class: 'card' },
+            h('h3', { class: 'card__title' }, b.name),
+            h('p', { class: 'card__meta' }, b.effect),
+            costList({ ...b.cost, botDays: b.botDays }),
+            blocker ? h('p', { class: 'card__gate' }, blocker) : null,
+            button('Queue', {
+              variant: blocker ? 'secondary' : 'primary',
+              disabled: !!blocker,
+              onClick: () => {
+                ctx.game.update((s) => startBuild(s, ctx.system, b.id, site.id));
+                ctx.ui.update((ui) => ({ ...ui, buildTab: 'active' }));
+              },
+            }),
+          );
+        }),
+    );
+    return { el: panel({ title: `Shop · ${site.name}` }, list), unsub };
+  };
+
+  const active = () => {
+    const body = h('div');
+    const unsub = bindGame(ctx, body, workforceKey, (state) => {
+      const jobs = state.jobs.filter((j) => j.kind === 'build');
+      const crewed = state.buildings.map((b) => crewRow(ctx, state, b)).filter((r): r is HTMLElement => !!r);
+      const unattended = state.buildings.filter((b) => getBuilding(b.defId)?.crew === 0);
+      if (!jobs.length && !state.buildings.length) {
+        return [emptyState('Nothing built yet', 'Queue a building from the Shop. Bots build it, then stay on to run it.')];
+      }
+      return [
+        jobs.length ? h('ul', { class: 'assigns' }, ...jobs.map((j) => jobRow(ctx, state, j))) : null,
+        crewed.length ? h('ul', { class: 'assigns' }, ...crewed) : null,
+        unattended.length
+          ? h(
+              'p',
+              { class: 'muted' },
+              `Running unattended: ${unattended.map((b) => getBuilding(b.defId)?.name).join(', ')}.`,
+            )
+          : null,
+      ];
+    });
+    return { el: panel({ title: 'Construction & crews' }, body), unsub };
+  };
+
+  let unsubTab: (() => void) | null = null;
   const render = () => {
     const tab = ctx.ui.get().buildTab;
     tabs.forEach((btn, i) => btn.setAttribute('aria-selected', String((i === 0 ? 'shop' : 'active') === tab)));
+    unsubTab?.();
     clear(content);
-    content.append(
-      tab === 'shop'
-        ? panel(
-            { title: site ? `Shop · ${site.name}` : 'Shop', tag: 'Slice B' },
-            h(
-              'ul',
-              { class: 'cards' },
-              ...SHOP.map((b) =>
-                h(
-                  'li',
-                  { class: 'card' },
-                  h('h3', { class: 'card__title' }, b.name),
-                  h('p', { class: 'card__meta' }, b.effect),
-                  costList(b.cost),
-                  b.gate ? h('p', { class: 'card__gate' }, b.gate) : null,
-                  button('Queue', { disabled: true }),
-                ),
-              ),
-            ),
-          )
-        : panel(
-            { title: 'Active buildings', tag: 'Slice B' },
-            emptyState('Nothing built yet', 'Running buildings, assigned pips and upgrades will be managed here.'),
-          ),
-    );
+    const view = tab === 'shop' ? shop() : active();
+    unsubTab = view.unsub;
+    content.append(view.el);
   };
 
   render();
@@ -75,8 +96,17 @@ export const buildScreen: ScreenFactory = (ctx, { location }) => {
   const el = h(
     'div',
     { class: 'screen' },
+    siteChips(ctx, site.id, '/build'),
     h('div', { class: 'seg seg--wide', role: 'tablist', 'aria-label': 'Build views' }, ...tabs),
     content,
   );
-  return { el, title: 'Build', kicker: 'Construction & economy', dispose: unsub };
+  return {
+    el,
+    title: 'Build',
+    kicker: 'Construction & economy',
+    dispose: () => {
+      unsub();
+      unsubTab?.();
+    },
+  };
 };
