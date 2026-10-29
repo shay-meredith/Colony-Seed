@@ -28,6 +28,8 @@ export interface SystemBody {
   /** Can host a colony (planet surface, moon domes, or station habitat). */
   habitable: boolean;
   hasAtmosphere: boolean;
+  /** Gas giants have no surface: orbital surveys only, skimmers in orbit. */
+  gasGiant?: boolean;
   summary: string;
   traits: BodyTraits;
 }
@@ -113,6 +115,7 @@ export const TESSALY: StarSystem = {
       color: '#b08a5c',
       habitable: false,
       hasAtmosphere: true,
+      gasGiant: true,
       summary: 'Gas giant. Volatiles skimming target.',
       traits: { gravity: '2.3 g', atmosphere: 'H₂/He', temperature: '-120 °C cloud tops', hazard: 'Storms' },
     },

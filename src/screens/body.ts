@@ -1,15 +1,16 @@
 import { clear, h } from '../core/dom';
 import { familyOf, getBody, KIND_LABEL } from '../data/system';
 import { renderBodyArt } from '../ui/bodyArt';
+import { getBuilding, SURVEY_LABEL } from '../game/catalog';
+import { surveyLevel } from '../game/sim';
+import { bindGame } from '../ui/assignments';
 import { button, panel, statGrid } from '../ui/components';
 import { notFoundScreen } from './notFound';
 import type { ScreenFactory } from './types';
 
-const MAX_PREVIEW = 24;
-
 /**
  * Habitable body viewer: the "living result" of Build. Colonies/stations grow
- * procedurally here as buildings are placed (Slice B feeds real structures).
+ * procedurally here as buildings are placed.
  */
 export const bodyScreen: ScreenFactory = (ctx, args) => {
   const body = getBody(ctx.system, args.params.id ?? '');
@@ -17,20 +18,8 @@ export const bodyScreen: ScreenFactory = (ctx, args) => {
 
   const family = familyOf(ctx.system, body.id);
   const artSlot = h('div', { class: 'body-view__art' });
-  const growthValue = h('output', { class: 'stepper__value' });
-
-  const growth = () => ctx.ui.get().growthPreview[body.id] ?? 0;
-  const setGrowth = (n: number) =>
-    ctx.ui.update((ui) => ({
-      ...ui,
-      growthPreview: { ...ui.growthPreview, [body.id]: Math.max(0, Math.min(MAX_PREVIEW, n)) },
-    }));
-
-  const renderArt = () => {
-    clear(artSlot);
-    artSlot.append(renderBodyArt(body, growth()));
-    growthValue.textContent = String(growth());
-  };
+  const survey = h('span', { class: 'survey' });
+  const structures = h('div');
 
   const switcher =
     family.length > 1
@@ -52,23 +41,28 @@ export const bodyScreen: ScreenFactory = (ctx, args) => {
         )
       : null;
 
-  const growthPanel = body.habitable
-    ? panel(
-        { title: 'Growth preview', tag: 'Placeholder' },
+  // Structures grow procedurally from real buildings on this body.
+  const unsub = bindGame(
+    ctx,
+    structures,
+    (s) => `${surveyLevel(s, body.id)}|${s.buildings.filter((b) => b.bodyId === body.id).length}|${s.jobs.length}`,
+    (state) => {
+      const built = state.buildings.filter((b) => b.bodyId === body.id);
+      const pending = state.jobs.filter((j) => j.kind === 'build' && j.bodyId === body.id);
+      clear(artSlot);
+      artSlot.append(renderBodyArt(body, built.length));
+      survey.textContent = SURVEY_LABEL[surveyLevel(state, body.id)] ?? '';
+      if (!built.length && !pending.length) return [h('p', { class: 'muted' }, 'No structures placed yet.')];
+      return [
         h(
-          'p',
-          { class: 'muted' },
-          'Structures appear procedurally as you build. This stepper fakes it until Slice B wires real buildings.',
+          'ul',
+          { class: 'links' },
+          ...built.map((b) => h('li', null, getBuilding(b.defId)?.name ?? b.defId)),
+          ...pending.map((j) => h('li', { class: 'muted' }, `${getBuilding(j.defId)?.name ?? j.defId} (under construction)`)),
         ),
-        h(
-          'div',
-          { class: 'stepper' },
-          button('−', { ariaLabel: 'Fewer structures', onClick: () => setGrowth(growth() - 1) }),
-          growthValue,
-          button('+', { ariaLabel: 'More structures', onClick: () => setGrowth(growth() + 1) }),
-        ),
-      )
-    : null;
+      ];
+    },
+  );
 
   const el = h(
     'div',
@@ -82,7 +76,7 @@ export const bodyScreen: ScreenFactory = (ctx, args) => {
         { class: 'kicker' },
         body.habitable ? 'Colony candidate' : 'Resource body',
         ' · ',
-        h('span', { class: 'survey' }, 'Unsurveyed'),
+        survey,
       ),
       h('p', null, body.summary),
       statGrid([
@@ -98,14 +92,8 @@ export const bodyScreen: ScreenFactory = (ctx, args) => {
         button('Build here', { onClick: () => ctx.navigate(`/build?body=${body.id}`) }),
       ),
     ),
-    growthPanel,
-    panel({ title: 'Structures', tag: 'Slice B' }, h('p', { class: 'muted' }, 'No structures placed yet.')),
+    panel({ title: 'Structures' }, structures),
   );
-
-  renderArt();
-  const unsub = ctx.ui.subscribe((ui, prev) => {
-    if (ui.growthPreview[body.id] !== prev.growthPreview[body.id]) renderArt();
-  });
 
   return { el, title: body.name, kicker: `Body viewer · ${KIND_LABEL[body.kind]}`, dispose: unsub };
 };

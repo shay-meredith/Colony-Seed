@@ -24,7 +24,7 @@ export function createHud(ctx: AppContext): HTMLElement {
           h('span', { class: 'hud__code' }, def.code),
           stock.locked
             ? h('span', { class: 'hud__value', 'aria-label': `${def.label} locked` }, icon('lock', 'icon icon--sm'))
-            : h('span', { class: 'hud__value', 'aria-label': `${def.label} ${stock.amount}` }, formatAmount(stock.amount)),
+            : h('span', { class: 'hud__value', 'aria-label': `${def.label} ${Math.round(stock.amount)}` }, formatAmount(stock.amount)),
           !stock.locked && rate !== 0
             ? h('span', { class: `hud__rate ${rate > 0 ? 'is-up' : 'is-down'}` }, `${rate > 0 ? '+' : ''}${rate}`)
             : null,
